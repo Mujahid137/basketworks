@@ -6,19 +6,19 @@ export default function Portfolio() {
       name: "BasLagbe",
       type: "Real Estate",
       href: "https://mujahid137.github.io/HomeRent/",
-      image: "/work/baslagbe.png",
+      image: "work/baslagbe.png",
     },
     {
       name: "DigitalStudio",
       type: "Agency",
       href: "https://mujahid137.github.io/my-tsx-site/",
-      image: "/work/digitalstudio.png",
+      image: "work/digitalstudio.png",
     },
     {
       name: "Mujahid's Portfolio",
       type: "Portfolio",
       href: "https://mujahid137.github.io/Mujahid-s-Portfolio/",
-      image: "/work/mujahid-portfolio.png",
+      image: "work/mujahid-portfolio.png",
     },
   ];
 
@@ -42,7 +42,7 @@ export default function Portfolio() {
               >
                 <div className="h-56 overflow-hidden rounded-2xl theme-card theme-card-hover">
                   <img
-                    src={project.image}
+                    src={`${import.meta.env.BASE_URL}${project.image}`}
                     alt={`${project.name} homepage`}
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     loading="lazy"

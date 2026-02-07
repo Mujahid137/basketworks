@@ -136,6 +136,21 @@ body {
   outline: none;
 }
 
+.theme-input-pill {
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.theme-input-pill::placeholder {
+  color: var(--text-subtle);
+}
+
+.theme-input-pill:focus {
+  border-color: var(--card-border-hover);
+  outline: none;
+}
+
 .theme-icon-btn {
   border: 1px solid var(--card-border);
   color: var(--text-primary);
