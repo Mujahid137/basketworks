@@ -5,7 +5,7 @@ const packages = [
     name: "Starter",
     price: "2.5k",
     desc: "For new brands launching fast.",
-    bullets: ["1–2 key pages", "Design + build", "Launch in 2 weeks"],
+    bullets: ["1-2 key pages", "Design + build", "Launch in 2 weeks"],
   },
   {
     name: "Growth",
@@ -18,13 +18,13 @@ const packages = [
     name: "Enterprise",
     price: "Custom",
     desc: "For complex teams and integrations.",
-    bullets: ["Multi‑store setup", "Custom integrations", "Ongoing support"],
+    bullets: ["Multi-store setup", "Custom integrations", "Ongoing support"],
   },
 ];
 
 export default function Packages() {
   return (
-    <section className="py-28">
+    <section className="py-24 md:py-28">
       <div className="max-w-7xl mx-auto px-6">
         <FadeUp>
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -37,7 +37,7 @@ export default function Packages() {
               </h3>
             </div>
             <p className="theme-muted max-w-md">
-              Pick a starting point. We’ll tailor it to your scope.
+              Pick a starting point. We'll tailor it to your scope.
             </p>
           </div>
         </FadeUp>
@@ -46,7 +46,7 @@ export default function Packages() {
           {packages.map((pkg, i) => (
             <FadeUp delay={i * 0.1} key={pkg.name}>
               <div
-                className={`rounded-2xl p-6 theme-card theme-card-hover ${
+                className={`rounded-2xl p-5 md:p-6 theme-card theme-card-hover ${
                   pkg.featured ? "ring-1 ring-white/20" : ""
                 }`}
               >

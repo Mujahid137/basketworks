@@ -2,7 +2,7 @@ import { FadeUp } from "./Animate";
 
 export default function CaseStudy() {
   return (
-    <section className="py-28">
+    <section className="py-24 md:py-28">
       <div className="max-w-7xl mx-auto px-6 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <FadeUp>
           <div>
@@ -17,23 +17,20 @@ export default function CaseStudy() {
               streamlined search, and a faster checkout experience.
             </p>
 
-            <div className="mt-8 grid gap-6 sm:grid-cols-3">
-              <div className="theme-card p-4 rounded-2xl">
-                <p className="text-lg font-semibold font-display">+3.2x</p>
-                <p className="text-xs uppercase tracking-[0.25em] theme-subtle mt-2">
-                  Conversion
+            <div className="mt-8 flex flex-wrap gap-3">
+              <div className="theme-card rounded-full px-5 py-2">
+                <p className="text-sm uppercase tracking-[0.25em] theme-subtle">
+                  +3.2x Conversion
                 </p>
               </div>
-              <div className="theme-card p-4 rounded-2xl">
-                <p className="text-lg font-semibold font-display">-41%</p>
-                <p className="text-xs uppercase tracking-[0.25em] theme-subtle mt-2">
-                  Bounce Rate
+              <div className="theme-card rounded-full px-5 py-2">
+                <p className="text-sm uppercase tracking-[0.25em] theme-subtle">
+                  -41% Bounce Rate
                 </p>
               </div>
-              <div className="theme-card p-4 rounded-2xl">
-                <p className="text-lg font-semibold font-display">6 weeks</p>
-                <p className="text-xs uppercase tracking-[0.25em] theme-subtle mt-2">
-                  Launch
+              <div className="theme-card rounded-full px-5 py-2">
+                <p className="text-sm uppercase tracking-[0.25em] theme-subtle">
+                  6 Weeks Launch
                 </p>
               </div>
             </div>

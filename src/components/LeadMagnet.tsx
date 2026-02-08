@@ -2,10 +2,10 @@ import { FadeUp } from "./Animate";
 
 export default function LeadMagnet() {
   return (
-    <section className="py-24">
+    <section className="py-20 md:py-24">
       <div className="max-w-6xl mx-auto px-6">
         <FadeUp>
-          <div className="rounded-3xl p-8 md:p-10 theme-card">
+          <div className="rounded-3xl p-6 md:p-10 theme-card">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="max-w-xl">
                 <p className="text-xs uppercase tracking-[0.35em] theme-subtle">
@@ -15,7 +15,7 @@ export default function LeadMagnet() {
                   Get our Shopify CRO checklist
                 </h3>
                 <p className="mt-3 theme-muted max-w-xl">
-                  17 quick wins to improve conversion rate and page speed.
+                  17 quick wins to improve conversion and speed.
                 </p>
               </div>
               <form className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:items-center">

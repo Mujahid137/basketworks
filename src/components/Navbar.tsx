@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import AuthModal from "./AuthModal";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? "dark" : "light";
@@ -61,6 +63,18 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAuthOpen(true)}
+              className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => setAuthOpen(true)}
+              className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+            >
+              Register
+            </button>
             <button className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn">
               Book a Call
             </button>
@@ -167,6 +181,26 @@ export default function Navbar() {
                   Contact
                 </a>
               </div>
+              <div className="mt-8 flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    setAuthOpen(true);
+                  }}
+                  className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    setAuthOpen(true);
+                  }}
+                  className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                >
+                  Register
+                </button>
+              </div>
               <div className="mt-10 flex items-center gap-3">
                 <button className="flex-1 rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn">
                   Book a Call
@@ -210,6 +244,8 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );
 }

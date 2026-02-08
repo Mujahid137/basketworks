@@ -6,9 +6,11 @@ const services = [
   "Conversion Optimization",
 ];
 
+const tools = ["Shopify", "Klaviyo", "GA4", "Stripe", "Figma", "Hotjar"];
+
 export default function Services() {
   return (
-    <section id="services" className="py-40 bg-transparent">
+    <section id="services" className="py-24 md:py-40 bg-transparent">
       <div className="max-w-7xl mx-auto px-6">
         <FadeUp>
           <h2 className="text-5xl font-bold mb-20 font-display">What We Do</h2>
@@ -24,6 +26,17 @@ export default function Services() {
                 </p>
               </div>
             </FadeUp>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-wrap gap-3">
+          {tools.map((tool) => (
+            <span
+              key={tool}
+              className="rounded-full px-4 py-2 text-xs uppercase tracking-[0.3em] theme-card theme-subtle"
+            >
+              {tool}
+            </span>
           ))}
         </div>
       </div>

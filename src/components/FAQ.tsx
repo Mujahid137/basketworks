@@ -25,7 +25,7 @@ const faqs = [
 
 export default function FAQ() {
   return (
-    <section className="py-28">
+    <section className="py-24 md:py-28">
       <div className="max-w-6xl mx-auto px-6">
         <FadeUp>
           <div className="text-center">

@@ -2,7 +2,7 @@
 
 export default function Testimonials() {
   return (
-    <section className="py-40">
+    <section className="py-24 md:py-40">
       <div className="max-w-5xl mx-auto px-6 text-center">
         <FadeUp>
           <p className="text-xl theme-muted">

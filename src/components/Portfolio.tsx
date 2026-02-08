@@ -23,7 +23,7 @@ export default function Portfolio() {
   ];
 
   return (
-    <section id="work" className="py-40 bg-transparent">
+    <section id="work" className="py-24 md:py-40 bg-transparent">
       <div className="max-w-7xl mx-auto px-6">
         <FadeUp>
           <h2 className="text-5xl font-bold mb-20 font-display">
