@@ -25,6 +25,7 @@ const sections = [
     title: "Profile info",
     desc: "Name, role, company, and public details.",
     cta: "Edit profile",
+    href: "/profile",
   },
   {
     title: "Account settings",
@@ -208,9 +209,18 @@ export default function ProfileDrawer({
                       </h4>
                       <p className="mt-1 text-sm theme-muted">{section.desc}</p>
                     </div>
-                    <button className="mt-2 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition theme-outline-btn md:mt-0">
-                      {section.cta}
-                    </button>
+                    {section.href ? (
+                      <a
+                        href={section.href}
+                        className="mt-2 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition theme-outline-btn md:mt-0 inline-flex items-center justify-center"
+                      >
+                        {section.cta}
+                      </a>
+                    ) : (
+                      <button className="mt-2 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition theme-outline-btn md:mt-0">
+                        {section.cta}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

@@ -150,143 +150,181 @@ export default function AuthModal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 30, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative w-full max-w-xl rounded-3xl p-6 md:p-8 theme-card max-h-[85vh] overflow-y-auto"
+            className="relative w-full max-w-5xl rounded-3xl p-6 md:p-8 theme-card max-h-[85vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                  Account
-                </p>
-                <h3 className="mt-2 text-2xl font-semibold font-display">
-                  {title}
-                </h3>
-                <p className="mt-2 text-sm theme-muted">
-                  {mode === "login"
-                    ? "Welcome back. Use your email and password to continue."
-                    : "It's quick and easy."}
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="rounded-full p-2 transition theme-outline-btn"
-                aria-label="Close"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M6 6l12 12M18 6l-12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="mt-6">
-                <form className="space-y-4" onSubmit={handlePassword}>
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                      Email address
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="you@company.com"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Your password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                  >
-                    {loading
-                      ? "Working..."
-                      : mode === "register"
-                        ? "Create account"
-                        : "Log in"}
-                  </button>
-                  {mode === "login" && (
-                    <button
-                      type="button"
-                      onClick={handleResend}
-                      className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                    >
-                      Resend confirmation
-                    </button>
-                  )}
-                </form>
-
-              {step === "success" && (
-                <div className="space-y-4">
-                  <p className="theme-muted">
-                    You're signed in. Your session is active on this device.
+            <div className="grid gap-8 md:grid-cols-[1.1fr_1fr]">
+              <div className="hidden md:flex flex-col justify-between rounded-3xl border border-white/10 bg-white/5 p-8">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] theme-subtle">
+                    Basketworks
                   </p>
+                  <h3 className="mt-3 text-3xl font-semibold font-display">
+                    {mode === "login"
+                      ? "Design that converts faster."
+                      : "Launch your next growth phase."}
+                  </h3>
+                  <p className="mt-4 text-sm theme-muted">
+                    {mode === "login"
+                      ? "Welcome back. Manage your project space, briefs, and active work."
+                      : "Create your account to access updates, assets, and reporting."}
+                  </p>
+                </div>
+                <div className="mt-10 space-y-4 text-sm theme-muted">
+                  <div className="flex items-center gap-3">
+                    <span className="h-2 w-2 rounded-full bg-white/60" />
+                    Dedicated agency workspace
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="h-2 w-2 rounded-full bg-white/60" />
+                    Live project status updates
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="h-2 w-2 rounded-full bg-white/60" />
+                    Secure documents & approvals
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.35em] theme-subtle">
+                      Account
+                    </p>
+                    <h3 className="mt-2 text-2xl font-semibold font-display">
+                      {title}
+                    </h3>
+                    <p className="mt-2 text-sm theme-muted">
+                      {mode === "login"
+                        ? "Welcome back. Use your email and password to continue."
+                        : "It's quick and easy."}
+                    </p>
+                  </div>
                   <button
-                    type="button"
                     onClick={onClose}
-                    className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                    className="rounded-full p-2 transition theme-outline-btn"
+                    aria-label="Close"
                   >
-                    Close
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className="h-5 w-5"
+                    >
+                      <path d="M6 6l12 12M18 6l-12 12" />
+                    </svg>
                   </button>
                 </div>
-              )}
-            </div>
 
-            {notice && (
-              <p
-                className={`mt-4 text-sm ${
-                  notice.type === "error" ? "text-red-300" : "text-emerald-200"
-                }`}
-              >
-                {notice.text}
-              </p>
-            )}
+                <div className="mt-6">
+                  <form className="space-y-4" onSubmit={handlePassword}>
+                    <div>
+                      <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
+                        Email address
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="you@company.com"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Your password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                    >
+                      {loading
+                        ? "Working..."
+                        : mode === "register"
+                          ? "Create account"
+                          : "Log in"}
+                    </button>
+                    {mode === "login" && (
+                      <button
+                        type="button"
+                        onClick={handleResend}
+                        className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                      >
+                        Resend confirmation
+                      </button>
+                    )}
+                  </form>
 
-            <div className="mt-6 text-center text-sm theme-muted">
-              {mode === "login" ? (
-                <>
-                  New to Basketworks?{" "}
-                  <button
-                    type="button"
-                    onClick={() => resetMode("register")}
-                    className="theme-link"
+                  {step === "success" && (
+                    <div className="space-y-4">
+                      <p className="theme-muted">
+                        You're signed in. Your session is active on this device.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {notice && (
+                  <p
+                    className={`mt-4 text-sm ${
+                      notice.type === "error"
+                        ? "text-red-300"
+                        : "text-emerald-200"
+                    }`}
                   >
-                    Create an account
-                  </button>
-                  .
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => resetMode("login")}
-                    className="theme-link"
-                  >
-                    Log in
-                  </button>
-                  .
-                </>
-              )}
+                    {notice.text}
+                  </p>
+                )}
+
+                <div className="mt-6 text-center text-sm theme-muted">
+                  {mode === "login" ? (
+                    <>
+                      New to Basketworks?{" "}
+                      <button
+                        type="button"
+                        onClick={() => resetMode("register")}
+                        className="theme-link"
+                      >
+                        Create an account
+                      </button>
+                      .
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => resetMode("login")}
+                        className="theme-link"
+                      >
+                        Log in
+                      </button>
+                      .
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
         </motion.div>
