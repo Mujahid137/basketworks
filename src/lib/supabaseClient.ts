@@ -1,10 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env
   .VITE_SUPABASE_ANON_KEY as string | undefined;
 
-const createMockSupabase = () =>
+const createMockSupabase = (): SupabaseClient =>
   ({
     auth: {
       getSession: async () => ({ data: { session: null }, error: null }),
@@ -32,7 +32,7 @@ const createMockSupabase = () =>
         error: new Error("Supabase is not configured."),
       }),
     },
-  }) as ReturnType<typeof createClient>;
+  } as unknown as SupabaseClient);
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("Supabase env vars are missing.");
