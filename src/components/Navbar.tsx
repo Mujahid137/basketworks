@@ -1,16 +1,44 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthModal from "./AuthModal";
+import ProfileDrawer from "./ProfileDrawer";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [authOpen, setAuthOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? "dark" : "light";
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email ?? null);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      if (userEmail) {
+        setProfileOpen(true);
+      } else {
+        setAuthOpen(true);
+      }
+    };
+    window.addEventListener("basketworks:profile", handler);
+    return () => window.removeEventListener("basketworks:profile", handler);
+  }, [userEmail]);
 
   return (
     <>
@@ -63,18 +91,29 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setAuthOpen(true)}
-              className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => setAuthOpen(true)}
-              className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-            >
-              Register
-            </button>
+            {userEmail ? (
+              <button
+                onClick={() => setProfileOpen(true)}
+                className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+              >
+                Profile
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                >
+                  Register
+                </button>
+              </>
+            )}
             <button className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn">
               Book a Call
             </button>
@@ -182,24 +221,38 @@ export default function Navbar() {
                 </a>
               </div>
               <div className="mt-8 flex flex-col gap-3">
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    setAuthOpen(true);
-                  }}
-                  className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    setAuthOpen(true);
-                  }}
-                  className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                >
-                  Register
-                </button>
+                {userEmail ? (
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      setProfileOpen(true);
+                    }}
+                    className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                  >
+                    Profile
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        setAuthOpen(true);
+                      }}
+                      className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                    >
+                      Login
+                    </button>
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        setAuthOpen(true);
+                      }}
+                      className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                    >
+                      Register
+                    </button>
+                  </>
+                )}
               </div>
               <div className="mt-10 flex items-center gap-3">
                 <button className="flex-1 rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn">
@@ -246,6 +299,12 @@ export default function Navbar() {
       </AnimatePresence>
 
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <ProfileDrawer
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        email={userEmail ?? undefined}
+        onSignOut={() => supabase.auth.signOut().then(() => setProfileOpen(false))}
+      />
     </>
   );
 }

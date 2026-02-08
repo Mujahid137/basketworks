@@ -28,6 +28,12 @@ export default function Hero() {
           <button className="px-8 py-3 rounded-full transition theme-outline-btn">
             View Work
           </button>
+          <button
+            onClick={() => window.dispatchEvent(new Event("basketworks:profile"))}
+            className="px-8 py-3 rounded-full transition theme-outline-btn"
+          >
+            Client Portal
+          </button>
         </div>
       </motion.div>
     </section>
