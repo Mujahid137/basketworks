@@ -38,7 +38,7 @@ export default function Hero() {
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <button className="px-8 py-3 bg-accent text-black rounded-full font-semibold hover:shadow-[0_0_40px_#7C5CFF] transition">
+          <button className="px-8 py-3 rounded-full font-semibold transition theme-solid-btn">
             Start a Project
           </button>
           <button className="px-8 py-3 rounded-full transition theme-outline-btn">

@@ -46,6 +46,9 @@ body {
   --nav-bg: rgba(8, 10, 12, 0.6);
   --nav-border: rgba(255, 255, 255, 0.1);
   --overlay-bg: rgba(8, 10, 12, 0.95);
+  --accent: #8aa2ff;
+  --accent-strong: #6c88ff;
+  --accent-contrast: #0b0d12;
 }
 
 .font-display {
@@ -119,6 +122,17 @@ body {
 .theme-outline-btn:hover {
   border-color: var(--card-border-hover);
   color: var(--text-primary);
+}
+
+.theme-solid-btn {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 12px 30px rgba(108, 136, 255, 0.25);
+}
+
+.theme-solid-btn:hover {
+  background: var(--accent-strong);
+  box-shadow: 0 16px 34px rgba(108, 136, 255, 0.35);
 }
 
 .theme-input {
@@ -385,6 +399,9 @@ html[data-theme="light"] body {
   --nav-bg: rgba(214, 222, 236, 0.88);
   --nav-border: rgba(12, 17, 28, 0.14);
   --overlay-bg: rgba(206, 214, 231, 0.96);
+  --accent: #2f6fed;
+  --accent-strong: #1f5cdb;
+  --accent-contrast: #ffffff;
 }
 
 html[data-theme="light"] .logo-holo__text {

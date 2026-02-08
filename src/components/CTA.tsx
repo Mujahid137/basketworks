@@ -20,7 +20,7 @@ export default function CTA() {
                 </p>
               </div>
               <div className="flex flex-col gap-4 sm:flex-row md:justify-end">
-                <button className="px-8 py-4 bg-accent text-black rounded-full font-semibold hover:shadow-[0_0_40px_#7C5CFF] transition">
+                <button className="px-8 py-4 rounded-full font-semibold transition theme-solid-btn">
                   Book a Call
                 </button>
                 <button className="px-8 py-4 rounded-full transition theme-outline-btn">
