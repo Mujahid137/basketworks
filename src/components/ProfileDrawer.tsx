@@ -94,24 +94,24 @@ export default function ProfileDrawer({
               </button>
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="mt-10 grid gap-5 md:grid-cols-2">
               {sections.map((section) => (
                 <div
                   key={section.title}
-                  className="rounded-2xl p-5 md:p-6 theme-card theme-card-hover"
+                  className="rounded-2xl p-4 md:p-5 theme-card theme-card-hover"
                 >
                   <h4 className="text-base font-semibold font-display">
                     {section.title}
                   </h4>
                   <p className="mt-2 text-sm theme-muted">{section.desc}</p>
-                  <button className="mt-4 rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn">
+                  <button className="mt-4 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition theme-outline-btn">
                     {section.cta}
                   </button>
                 </div>
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="mt-10 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-sm theme-muted">
                 Need help? Our team responds within 1 business day.
               </p>

@@ -1,6 +1,22 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Hero() {
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSignedIn(Boolean(data.session?.user));
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(Boolean(session?.user));
+    });
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
+
   return (
     <section className="min-h-screen flex items-center justify-center px-6 pt-32 text-center">
       <motion.div
@@ -32,7 +48,7 @@ export default function Hero() {
             onClick={() => window.dispatchEvent(new Event("basketworks:profile"))}
             className="px-8 py-3 rounded-full transition theme-outline-btn"
           >
-            Client Portal
+            {signedIn ? "Client Portal" : "Login / Register"}
           </button>
         </div>
       </motion.div>
