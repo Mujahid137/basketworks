@@ -8,6 +8,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [profileOpen, setProfileOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
@@ -101,13 +102,19 @@ export default function Navbar() {
             ) : (
               <>
                 <button
-                  onClick={() => setAuthOpen(true)}
+                  onClick={() => {
+                    setAuthMode("login");
+                    setAuthOpen(true);
+                  }}
                   className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
                 >
                   Login
                 </button>
                 <button
-                  onClick={() => setAuthOpen(true)}
+                  onClick={() => {
+                    setAuthMode("register");
+                    setAuthOpen(true);
+                  }}
                   className="hidden md:inline-flex items-center rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
                 >
                   Register
@@ -236,6 +243,7 @@ export default function Navbar() {
                     <button
                       onClick={() => {
                         setOpen(false);
+                        setAuthMode("login");
                         setAuthOpen(true);
                       }}
                       className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
@@ -245,6 +253,7 @@ export default function Navbar() {
                     <button
                       onClick={() => {
                         setOpen(false);
+                        setAuthMode("register");
                         setAuthOpen(true);
                       }}
                       className="rounded-full px-4 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
@@ -298,7 +307,11 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        initialMode={authMode}
+      />
       <ProfileDrawer
         open={profileOpen}
         onClose={() => setProfileOpen(false)}

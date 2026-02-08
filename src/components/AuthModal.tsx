@@ -3,23 +3,25 @@ import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "../lib/supabaseClient";
 
 type AuthMode = "login" | "register";
-type AuthMethod = "password" | "otp";
 type Step = "request" | "verify" | "success";
 
 type AuthModalProps = {
   open: boolean;
   onClose: () => void;
+  initialMode?: AuthMode;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function AuthModal({ open, onClose }: AuthModalProps) {
+export default function AuthModal({
+  open,
+  onClose,
+  initialMode = "login",
+}: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>("login");
-  const [method, setMethod] = useState<AuthMethod>("password");
   const [step, setStep] = useState<Step>("request");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<{ type: "error" | "success"; text: string } | null>(
     null
@@ -28,23 +30,20 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   useEffect(() => {
     if (!open) {
       setStep("request");
-      setCode("");
       setNotice(null);
       setPassword("");
+    } else {
+      setMode(initialMode);
     }
-  }, [open]);
+  }, [open, initialMode]);
 
   const title = useMemo(() => {
-    if (method === "otp") {
-      return mode === "login" ? "Sign in with OTP" : "Create account with OTP";
-    }
-    return mode === "login" ? "Sign in with password" : "Create an account";
-  }, [mode, method]);
+    return mode === "login" ? "Log in to Basketworks" : "Create new account";
+  }, [mode]);
 
   const resetMode = (nextMode: AuthMode) => {
     setMode(nextMode);
     setStep("request");
-    setCode("");
     setNotice(null);
   };
 
@@ -65,80 +64,72 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     try {
       setLoading(true);
       if (mode === "register") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password: password.trim(),
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
         });
         if (error) throw error;
+        if (data.user && data.user.identities?.length === 0) {
+          setNotice({
+            type: "error",
+            text: "Account already exists. Please log in instead.",
+          });
+          setMode("login");
+          return;
+        }
         setNotice({
           type: "success",
-          text: "Account created. Check your email to confirm.",
+          text: "Account created. Check your email to confirm your account.",
         });
         setStep("success");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password: password.trim(),
         });
         if (error) throw error;
-        setNotice({ type: "success", text: "Signed in successfully." });
-        setStep("success");
+        if (!data.user?.email_confirmed_at) {
+          await supabase.auth.signOut();
+          setNotice({
+            type: "error",
+            text: "Please confirm your email before logging in.",
+          });
+          setStep("request");
+        } else {
+          setNotice({ type: "success", text: "Logged in successfully." });
+          setStep("success");
+        }
       }
     } catch (err: any) {
-      setNotice({ type: "error", text: err?.message || "Auth failed." });
+      const message =
+        err?.message?.includes("Email not confirmed") ||
+        err?.message?.includes("email not confirmed")
+          ? "Please confirm your email before logging in."
+          : err?.message || "Auth failed.";
+      setNotice({ type: "error", text: message });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpRequest = async (event: FormEvent) => {
-    event.preventDefault();
-    setNotice(null);
-
+  const handleResend = async () => {
     if (!EMAIL_PATTERN.test(email.trim())) {
-      setNotice({ type: "error", text: "Enter a valid email address." });
+      setNotice({ type: "error", text: "Enter a valid email address first." });
       return;
     }
-
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.resend({
+        type: "signup",
         email: email.trim(),
-        options: {
-          shouldCreateUser: mode === "register",
-        },
       });
       if (error) throw error;
-      setStep("verify");
-      setNotice({ type: "success", text: "OTP sent. Check your inbox." });
+      setNotice({ type: "success", text: "Confirmation email resent." });
     } catch (err: any) {
-      setNotice({ type: "error", text: err?.message || "Failed to send OTP." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpVerify = async (event: FormEvent) => {
-    event.preventDefault();
-    setNotice(null);
-
-    if (!code.trim()) {
-      setNotice({ type: "error", text: "Enter the OTP code." });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: code.trim(),
-        type: "email",
-      });
-      if (error) throw error;
-      setNotice({ type: "success", text: "Signed in successfully." });
-      setStep("success");
-    } catch (err: any) {
-      setNotice({ type: "error", text: err?.message || "Invalid OTP." });
+      setNotice({ type: "error", text: err?.message || "Failed to resend email." });
     } finally {
       setLoading(false);
     }
@@ -169,6 +160,11 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
                 <h3 className="mt-2 text-2xl font-semibold font-display">
                   {title}
                 </h3>
+                <p className="mt-2 text-sm theme-muted">
+                  {mode === "login"
+                    ? "Welcome back. Use your email and password to continue."
+                    : "It's quick and easy."}
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -189,53 +185,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               </button>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <button
-                onClick={() => resetMode("login")}
-                className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
-                  mode === "login" ? "theme-outline-btn" : "theme-link"
-                }`}
-              >
-                Login
-              </button>
-              <button
-                onClick={() => resetMode("register")}
-                className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
-                  mode === "register" ? "theme-outline-btn" : "theme-link"
-                }`}
-              >
-                Register
-              </button>
-              <div className="flex flex-wrap gap-2 sm:ml-auto">
-                <button
-                  onClick={() => {
-                    setMethod("password");
-                    setStep("request");
-                    setNotice(null);
-                  }}
-                  className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
-                    method === "password" ? "theme-outline-btn" : "theme-link"
-                  }`}
-                >
-                  Password
-                </button>
-                <button
-                  onClick={() => {
-                    setMethod("otp");
-                    setStep("request");
-                    setNotice(null);
-                  }}
-                  className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
-                    method === "otp" ? "theme-outline-btn" : "theme-link"
-                  }`}
-                >
-                  OTP
-                </button>
-              </div>
-            </div>
-
             <div className="mt-6">
-              {method === "password" && (
                 <form className="space-y-4" onSubmit={handlePassword}>
                   <div>
                     <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
@@ -268,71 +218,22 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
                     disabled={loading}
                     className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
                   >
-                    {loading ? "Working..." : mode === "register" ? "Create" : "Sign in"}
+                    {loading
+                      ? "Working..."
+                      : mode === "register"
+                        ? "Create account"
+                        : "Log in"}
                   </button>
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                    >
+                      Resend confirmation
+                    </button>
+                  )}
                 </form>
-              )}
-
-              {method === "otp" && step === "request" && (
-                <form className="space-y-4" onSubmit={handleOtpRequest}>
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                      Email address
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="you@company.com"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                  >
-                    {loading ? "Sending..." : "Send OTP"}
-                  </button>
-                </form>
-              )}
-
-              {method === "otp" && step === "verify" && (
-                <form className="space-y-4" onSubmit={handleOtpVerify}>
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                      Enter OTP
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="6-digit code"
-                      value={code}
-                      onChange={(event) => setCode(event.target.value)}
-                      className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
-                    />
-                    <p className="mt-2 text-sm theme-muted">
-                      Sent to {email.trim() || "your email"}.
-                    </p>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                  >
-                    {loading ? "Verifying..." : "Verify OTP"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep("request")}
-                    className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                  >
-                    Resend OTP
-                  </button>
-                </form>
-              )}
 
               {step === "success" && (
                 <div className="space-y-4">
@@ -359,6 +260,34 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
                 {notice.text}
               </p>
             )}
+
+            <div className="mt-6 text-center text-sm theme-muted">
+              {mode === "login" ? (
+                <>
+                  New to Basketworks?{" "}
+                  <button
+                    type="button"
+                    onClick={() => resetMode("register")}
+                    className="theme-link"
+                  >
+                    Create an account
+                  </button>
+                  .
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => resetMode("login")}
+                    className="theme-link"
+                  >
+                    Log in
+                  </button>
+                  .
+                </>
+              )}
+            </div>
           </motion.div>
         </motion.div>
       )}
