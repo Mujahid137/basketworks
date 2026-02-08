@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -8,6 +8,8 @@ type OtpRecord = {
   mode: "login" | "register";
   createdAt: number;
 };
+
+const redis = Redis.fromEnv();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -24,13 +26,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const otpKey = `otp:code:${cleanEmail}`;
-  const record = (await kv.get(otpKey)) as OtpRecord | null;
+  const record = (await redis.get(otpKey)) as OtpRecord | null;
 
   if (!record || record.code !== cleanCode) {
     return res.status(400).json({ message: "Invalid or expired code." });
   }
 
-  await kv.del(otpKey);
+  await redis.del(otpKey);
 
   return res.status(200).json({ message: "Verified." });
 }

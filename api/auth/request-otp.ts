@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import nodemailer from "nodemailer";
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 
 const OTP_TTL_SECONDS = 10 * 60;
 const COOLDOWN_SECONDS = 60;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const buildOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+const redis = Redis.fromEnv();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -22,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const cooldownKey = `otp:cooldown:${cleanEmail}`;
-  const activeCooldown = await kv.get(cooldownKey);
+  const activeCooldown = await redis.get(cooldownKey);
 
   if (activeCooldown) {
     return res.status(429).json({ message: "Wait a minute before retrying." });
@@ -31,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const code = buildOtp();
   const otpKey = `otp:code:${cleanEmail}`;
 
-  await kv.set(
+  await redis.set(
     otpKey,
     {
       code,
@@ -40,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
     { ex: OTP_TTL_SECONDS }
   );
-  await kv.set(cooldownKey, true, { ex: COOLDOWN_SECONDS });
+  await redis.set(cooldownKey, true, { ex: COOLDOWN_SECONDS });
 
   try {
     const transporter = nodemailer.createTransport({
