@@ -1,7 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { supabase } from "../lib/supabaseClient";
 
 type AuthMode = "login" | "register";
+type AuthMethod = "password" | "otp";
 type Step = "request" | "verify" | "success";
 
 type AuthModalProps = {
@@ -13,8 +15,10 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AuthModal({ open, onClose }: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>("login");
+  const [method, setMethod] = useState<AuthMethod>("password");
   const [step, setStep] = useState<Step>("request");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<{ type: "error" | "success"; text: string } | null>(
@@ -26,8 +30,16 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       setStep("request");
       setCode("");
       setNotice(null);
+      setPassword("");
     }
   }, [open]);
+
+  const title = useMemo(() => {
+    if (method === "otp") {
+      return mode === "login" ? "Sign in with OTP" : "Create account with OTP";
+    }
+    return mode === "login" ? "Sign in with password" : "Create an account";
+  }, [mode, method]);
 
   const resetMode = (nextMode: AuthMode) => {
     setMode(nextMode);
@@ -36,7 +48,50 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     setNotice(null);
   };
 
-  const requestOtp = async (event: FormEvent) => {
+  const handlePassword = async (event: FormEvent) => {
+    event.preventDefault();
+    setNotice(null);
+
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setNotice({ type: "error", text: "Enter a valid email address." });
+      return;
+    }
+
+    if (!password.trim()) {
+      setNotice({ type: "error", text: "Password is required." });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      if (mode === "register") {
+        const { error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password.trim(),
+        });
+        if (error) throw error;
+        setNotice({
+          type: "success",
+          text: "Account created. Check your email to confirm.",
+        });
+        setStep("success");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: password.trim(),
+        });
+        if (error) throw error;
+        setNotice({ type: "success", text: "Signed in successfully." });
+        setStep("success");
+      }
+    } catch (err: any) {
+      setNotice({ type: "error", text: err?.message || "Auth failed." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpRequest = async (event: FormEvent) => {
     event.preventDefault();
     setNotice(null);
 
@@ -47,52 +102,43 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
 
     try {
       setLoading(true);
-      const response = await fetch("/api/auth/request-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), mode }),
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          shouldCreateUser: mode === "register",
+        },
       });
-      const data = await response.json();
-      if (!response.ok) {
-        setNotice({ type: "error", text: data?.message || "Failed to send code." });
-        return;
-      }
+      if (error) throw error;
       setStep("verify");
       setNotice({ type: "success", text: "OTP sent. Check your inbox." });
-    } catch (err) {
-      setNotice({ type: "error", text: "Network error. Try again." });
+    } catch (err: any) {
+      setNotice({ type: "error", text: err?.message || "Failed to send OTP." });
     } finally {
       setLoading(false);
     }
   };
 
-  const verifyOtp = async (event: FormEvent) => {
+  const handleOtpVerify = async (event: FormEvent) => {
     event.preventDefault();
     setNotice(null);
 
     if (!code.trim()) {
-      setNotice({ type: "error", text: "Enter the 6-digit code." });
+      setNotice({ type: "error", text: "Enter the OTP code." });
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), code: code.trim() }),
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: "email",
       });
-      const data = await response.json();
-      if (!response.ok) {
-        setNotice({ type: "error", text: data?.message || "Invalid code." });
-        return;
-      }
-      localStorage.setItem("auth_email", email.trim());
-      localStorage.setItem("auth_verified", "true");
+      if (error) throw error;
+      setNotice({ type: "success", text: "Signed in successfully." });
       setStep("success");
-      setNotice({ type: "success", text: "Verified. You are signed in." });
-    } catch (err) {
-      setNotice({ type: "error", text: "Network error. Try again." });
+    } catch (err: any) {
+      setNotice({ type: "error", text: err?.message || "Invalid OTP." });
     } finally {
       setLoading(false);
     }
@@ -121,7 +167,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
                   Account
                 </p>
                 <h3 className="mt-2 text-2xl font-semibold font-display">
-                  {mode === "login" ? "Sign in with OTP" : "Create an account"}
+                  {title}
                 </h3>
               </div>
               <button
@@ -143,7 +189,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               </button>
             </div>
 
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <button
                 onClick={() => resetMode("login")}
                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
@@ -160,11 +206,75 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               >
                 Register
               </button>
+              <div className="ml-auto flex gap-2">
+                <button
+                  onClick={() => {
+                    setMethod("password");
+                    setStep("request");
+                    setNotice(null);
+                  }}
+                  className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
+                    method === "password" ? "theme-outline-btn" : "theme-link"
+                  }`}
+                >
+                  Password
+                </button>
+                <button
+                  onClick={() => {
+                    setMethod("otp");
+                    setStep("request");
+                    setNotice(null);
+                  }}
+                  className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
+                    method === "otp" ? "theme-outline-btn" : "theme-link"
+                  }`}
+                >
+                  OTP
+                </button>
+              </div>
             </div>
 
             <div className="mt-6">
-              {step === "request" && (
-                <form className="space-y-4" onSubmit={requestOtp}>
+              {method === "password" && (
+                <form className="space-y-4" onSubmit={handlePassword}>
+                  <div>
+                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
+                      Email address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="you@company.com"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Your password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      className="mt-3 w-full rounded-full px-4 py-3 theme-input-pill"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                  >
+                    {loading ? "Working..." : mode === "register" ? "Create" : "Sign in"}
+                  </button>
+                </form>
+              )}
+
+              {method === "otp" && step === "request" && (
+                <form className="space-y-4" onSubmit={handleOtpRequest}>
                   <div>
                     <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
                       Email address
@@ -188,8 +298,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
                 </form>
               )}
 
-              {step === "verify" && (
-                <form className="space-y-4" onSubmit={verifyOtp}>
+              {method === "otp" && step === "verify" && (
+                <form className="space-y-4" onSubmit={handleOtpVerify}>
                   <div>
                     <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
                       Enter OTP
@@ -219,7 +329,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
                     onClick={() => setStep("request")}
                     className="w-full rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
                   >
-                    Resend code
+                    Resend OTP
                   </button>
                 </form>
               )}
@@ -227,7 +337,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               {step === "success" && (
                 <div className="space-y-4">
                   <p className="theme-muted">
-                    You're signed in. We will keep your session on this device.
+                    You're signed in. Your session is active on this device.
                   </p>
                   <button
                     type="button"
