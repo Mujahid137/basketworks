@@ -9,26 +9,15 @@ type ProfileDrawerProps = {
   onSignOut: () => void;
 };
 
-type ProfileForm = {
-  full_name: string;
-  role: string;
-  company: string;
-  website: string;
-  phone: string;
-};
-
-type ProfileRecord = ProfileForm & {
+type AdminProfile = {
   id: string;
   email: string | null;
-  is_admin?: boolean | null;
-};
-
-const emptyProfile: ProfileForm = {
-  full_name: "",
-  role: "",
-  company: "",
-  website: "",
-  phone: "",
+  full_name: string | null;
+  role: string | null;
+  company: string | null;
+  website: string | null;
+  phone: string | null;
+  created_at: string | null;
 };
 
 const sections = [
@@ -70,107 +59,91 @@ export default function ProfileDrawer({
   email,
   onSignOut,
 }: ProfileDrawerProps) {
-  const [profile, setProfile] = useState<ProfileForm>(emptyProfile);
-  const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState<{ type: "error" | "success"; text: string } | null>(
-    null
-  );
+  const [adminProfiles, setAdminProfiles] = useState<AdminProfile[]>([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminNotice, setAdminNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     let active = true;
-    const loadProfile = async () => {
-      setLoading(true);
-      setNotice(null);
+    const checkAdmin = async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData.session?.user?.id;
-        if (!userId) {
-          setNotice({ type: "error", text: "Please sign in to view your profile." });
-          return;
-        }
+        const { data: session } = await supabase.auth.getSession();
+        const user = session.session?.user;
+        if (!user) return;
         const { data, error } = await supabase
           .from("profiles")
-          .select("id, email, full_name, role, company, website, phone, is_admin")
-          .eq("id", userId)
+          .select("is_admin")
+          .eq("id", user.id)
           .single();
-        if (error) throw error;
-        if (active && data) {
-          setIsAdmin(Boolean(data.is_admin));
-          setSelectedProfileId(data.id);
-          setProfile({
-            full_name: data.full_name ?? "",
-            role: data.role ?? "",
-            company: data.company ?? "",
-            website: data.website ?? "",
-            phone: data.phone ?? "",
-          });
-          if (data.is_admin) {
-            const { data: allRows, error: allError } = await supabase
-              .from("profiles")
-              .select("id, email, full_name, role, company, website, phone, is_admin")
-              .order("created_at", { ascending: false });
-            if (allError) throw allError;
-            if (active && allRows) {
-              setProfiles(allRows);
-            }
-          } else {
-            setProfiles([]);
-          }
+        if (error || !data?.is_admin) {
+          if (active) setIsAdmin(false);
+          return;
         }
-      } catch (err: any) {
-        if (active) {
-          setNotice({
-            type: "error",
-            text: err?.message || "Unable to load profile.",
-          });
-        }
-      } finally {
-        if (active) setLoading(false);
+        if (active) setIsAdmin(true);
+      } catch (err) {
+        if (active) setIsAdmin(false);
       }
     };
-    loadProfile();
+    checkAdmin();
     return () => {
       active = false;
     };
   }, [open]);
 
-  const handleChange = (field: keyof ProfileForm, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    setNotice(null);
+  const fetchAdminProfiles = async () => {
+    setAdminLoading(true);
+    setAdminNotice(null);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      if (!userId) {
-        setNotice({ type: "error", text: "Please sign in to save changes." });
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      if (!token) {
+        setAdminNotice("Please log in again.");
         return;
       }
-      const targetId = selectedProfileId ?? userId;
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: profile.full_name || null,
-          role: profile.role || null,
-          company: profile.company || null,
-          website: profile.website || null,
-          phone: profile.phone || null,
-        })
-        .eq("id", targetId);
-      if (error) throw error;
-      setNotice({ type: "success", text: "Profile updated." });
+      const response = await fetch("/api/admin/profiles", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || "Failed to fetch profiles.");
+      }
+      const payload = await response.json();
+      setAdminProfiles(payload.profiles || []);
     } catch (err: any) {
-      setNotice({ type: "error", text: err?.message || "Save failed." });
+      setAdminNotice(err?.message || "Unable to load profiles.");
     } finally {
-      setSaving(false);
+      setAdminLoading(false);
     }
+  };
+
+  const exportProfiles = async () => {
+    if (!adminProfiles.length) {
+      await fetchAdminProfiles();
+    }
+    const rows = (adminProfiles.length ? adminProfiles : []).map((row) => {
+      return [
+        `Email: ${row.email ?? "-"}`,
+        `Name: ${row.full_name ?? "-"}`,
+        `Role: ${row.role ?? "-"}`,
+        `Company: ${row.company ?? "-"}`,
+        `Website: ${row.website ?? "-"}`,
+        `Phone: ${row.phone ?? "-"}`,
+        `Created: ${row.created_at ?? "-"}`,
+      ].join("\n");
+    });
+    const blob = new Blob([rows.join("\n\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "basketworks-profiles.txt";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -221,124 +194,6 @@ export default function ProfileDrawer({
               </button>
             </div>
 
-            <div className="mt-8 rounded-2xl px-4 py-4 md:px-5 theme-card">
-              <div className="flex flex-col gap-4">
-                {isAdmin && (
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                      Admin: Select profile
-                    </label>
-                    <select
-                      value={selectedProfileId ?? ""}
-                      onChange={(event) => {
-                        const nextId = event.target.value;
-                        setSelectedProfileId(nextId);
-                        const match = profiles.find((row) => row.id === nextId);
-                        if (match) {
-                          setProfile({
-                            full_name: match.full_name ?? "",
-                            role: match.role ?? "",
-                            company: match.company ?? "",
-                            website: match.website ?? "",
-                            phone: match.phone ?? "",
-                          });
-                        }
-                      }}
-                      className="mt-2 w-full rounded-full px-4 py-3 theme-input-pill"
-                    >
-                      {profiles.map((row) => (
-                        <option key={row.id} value={row.id}>
-                          {row.email || row.id}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                <div>
-                  <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                    Full name
-                  </label>
-                  <input
-                    value={profile.full_name}
-                    onChange={(event) => handleChange("full_name", event.target.value)}
-                    placeholder="Your name"
-                    className="mt-2 w-full rounded-full px-4 py-3 theme-input-pill"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                    Role / Title
-                  </label>
-                  <input
-                    value={profile.role}
-                    onChange={(event) => handleChange("role", event.target.value)}
-                    placeholder="Founder, CMO, etc."
-                    className="mt-2 w-full rounded-full px-4 py-3 theme-input-pill"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                    Company
-                  </label>
-                  <input
-                    value={profile.company}
-                    onChange={(event) => handleChange("company", event.target.value)}
-                    placeholder="Company name"
-                    className="mt-2 w-full rounded-full px-4 py-3 theme-input-pill"
-                  />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                      Website
-                    </label>
-                    <input
-                      value={profile.website}
-                      onChange={(event) => handleChange("website", event.target.value)}
-                      placeholder="https://"
-                      className="mt-2 w-full rounded-full px-4 py-3 theme-input-pill"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                      Phone
-                    </label>
-                    <input
-                      value={profile.phone}
-                      onChange={(event) => handleChange("phone", event.target.value)}
-                      placeholder="+1 000 000 0000"
-                      className="mt-2 w-full rounded-full px-4 py-3 theme-input-pill"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <p className="text-sm theme-muted">
-                    {loading
-                      ? "Loading profile..."
-                      : isAdmin
-                        ? "Admin access: you can edit any profile."
-                        : "Only you can access and update this information."}
-                  </p>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving || loading}
-                    className="rounded-full px-5 py-3 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
-                  >
-                    {saving ? "Saving..." : "Save changes"}
-                  </button>
-                </div>
-              </div>
-              {notice && (
-                <p
-                  className={`mt-4 text-sm ${
-                    notice.type === "error" ? "text-red-300" : "text-emerald-200"
-                  }`}
-                >
-                  {notice.text}
-                </p>
-              )}
-            </div>
-
             <div className="mt-8 space-y-0">
               {sections.map((section, index) => (
                 <div
@@ -362,32 +217,33 @@ export default function ProfileDrawer({
               ))}
             </div>
 
-            {isAdmin && profiles.length > 0 && (
-              <div className="mt-10">
+            {isAdmin && (
+              <div className="mt-10 rounded-2xl px-4 py-4 md:px-5 theme-card">
                 <p className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                  All profiles
+                  Admin tools
                 </p>
-                <div className="mt-4 space-y-3">
-                  {profiles.map((row) => (
-                    <div
-                      key={row.id}
-                      className="rounded-2xl px-4 py-3 theme-card theme-card-hover"
-                    >
-                      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                        <p className="text-sm font-semibold font-display">
-                          {row.full_name || row.email || "Unnamed"}
-                        </p>
-                        <p className="text-xs theme-subtle">
-                          {row.company || "No company"}
-                        </p>
-                      </div>
-                      <p className="mt-1 text-xs theme-muted">
-                        {row.role || "No role"} • {row.phone || "No phone"} •{" "}
-                        {row.website || "No website"}
-                      </p>
-                    </div>
-                  ))}
+                <p className="mt-2 text-sm theme-muted">
+                  Download all profile information as a plain text file.
+                </p>
+                <div className="mt-4 flex flex-col gap-3 md:flex-row">
+                  <button
+                    onClick={fetchAdminProfiles}
+                    className="rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                    disabled={adminLoading}
+                  >
+                    {adminLoading ? "Loading..." : "Load profiles"}
+                  </button>
+                  <button
+                    onClick={exportProfiles}
+                    className="rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition theme-outline-btn"
+                    disabled={adminLoading}
+                  >
+                    Export as text
+                  </button>
                 </div>
+                {adminNotice && (
+                  <p className="mt-3 text-sm text-amber-200">{adminNotice}</p>
+                )}
               </div>
             )}
 
