@@ -71,17 +71,16 @@ export default function ProfileDrawer({
       try {
         const { data: session } = await supabase.auth.getSession();
         const user = session.session?.user;
-        if (!user) return;
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("is_admin")
-          .eq("id", user.id)
-          .single();
-        if (error || !data?.is_admin) {
+        if (!user) {
           if (active) setIsAdmin(false);
           return;
         }
-        if (active) setIsAdmin(true);
+        // Optimistic UI: show admin tools for the known admin email.
+        if (user.email === "mdjx137@gmail.com") {
+          if (active) setIsAdmin(true);
+        } else {
+          if (active) setIsAdmin(false);
+        }
       } catch (err) {
         if (active) setIsAdmin(false);
       }
