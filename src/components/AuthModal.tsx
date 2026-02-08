@@ -151,7 +151,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60]"
+          className="fixed inset-0 z-[60] flex items-start justify-center px-4 py-6 sm:items-center"
         >
           <div className="absolute inset-0 theme-overlay" onClick={onClose} />
           <motion.div
@@ -159,7 +159,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 30, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="absolute left-1/2 top-16 w-[92%] max-w-xl -translate-x-1/2 rounded-3xl p-6 md:p-8 theme-card"
+            className="relative w-full max-w-xl rounded-3xl p-6 md:p-8 theme-card max-h-[85vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -189,7 +189,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               </button>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <button
                 onClick={() => resetMode("login")}
                 className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.35em] transition ${
@@ -206,7 +206,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
               >
                 Register
               </button>
-              <div className="ml-auto flex gap-2">
+              <div className="flex flex-wrap gap-2 sm:ml-auto">
                 <button
                   onClick={() => {
                     setMethod("password");

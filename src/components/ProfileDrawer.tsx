@@ -94,19 +94,25 @@ export default function ProfileDrawer({
               </button>
             </div>
 
-            <div className="mt-10 grid gap-5 md:grid-cols-2">
-              {sections.map((section) => (
+            <div className="mt-8 space-y-0">
+              {sections.map((section, index) => (
                 <div
                   key={section.title}
-                  className="rounded-2xl p-4 md:p-5 theme-card theme-card-hover"
+                  className={`flex flex-col gap-3 px-4 py-4 md:px-5 ${
+                    index === 0 ? "pt-0" : "border-t border-white/10"
+                  }`}
                 >
-                  <h4 className="text-base font-semibold font-display">
-                    {section.title}
-                  </h4>
-                  <p className="mt-2 text-sm theme-muted">{section.desc}</p>
-                  <button className="mt-4 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition theme-outline-btn">
-                    {section.cta}
-                  </button>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h4 className="text-base font-semibold font-display">
+                        {section.title}
+                      </h4>
+                      <p className="mt-1 text-sm theme-muted">{section.desc}</p>
+                    </div>
+                    <button className="mt-2 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition theme-outline-btn md:mt-0">
+                      {section.cta}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
