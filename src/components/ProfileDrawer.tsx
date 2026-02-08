@@ -218,9 +218,14 @@ export default function ProfileDrawer({
 
             {isAdmin && (
               <div className="mt-10 rounded-2xl px-4 py-4 md:px-5 theme-card">
-                <p className="text-xs uppercase tracking-[0.35em] theme-subtle">
-                  Admin tools
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs uppercase tracking-[0.35em] theme-subtle">
+                    Admin tools
+                  </p>
+                  <span className="text-[11px] uppercase tracking-[0.3em] theme-subtle">
+                    Private
+                  </span>
+                </div>
                 <p className="mt-2 text-sm theme-muted">
                   Download all profile information as a plain text file.
                 </p>
